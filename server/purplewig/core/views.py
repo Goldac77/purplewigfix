@@ -9,6 +9,9 @@ from core.utils import *
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 import threading
+from datetime import datetime, timedelta, timezone
+import pytz
+UTC = pytz.UTC
 
 
 class AccountCreation(viewsets.ViewSet):
@@ -23,12 +26,15 @@ class AccountCreation(viewsets.ViewSet):
     def create(self, request):
         email = request.data['email']
         password = request.data['password']
-        user = get_user_by_email(email=email)
+        # print(f"email: {email}, password: {password}")
         
-        if not email or password:
+        if email is None or password is None:
+            print(f"email: {email}, password: {password}")
+
             context = {"detail": "Email and password are required"}
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
-        
+        user = get_user_by_email(email=email)
+
         if user:
             context = {"detail" :"User already exists"}
             return Response(context, status=status.HTTP_208_ALREADY_REPORTED)
@@ -53,7 +59,7 @@ class AccountCreation(viewsets.ViewSet):
         if user_otp:
             user_otp.delete()
             
-        if email_verification(email, 6):
+        if email_verification(email, 5):
             context = {"detail": "Verification code successfully sent", "email": email}
             return Response(context, status=status.HTTP_200_OK)
         return Response(
@@ -68,7 +74,7 @@ class AccountCreation(viewsets.ViewSet):
         otp = request.data['otp']
         user = get_user_by_email(email=email)
         
-        if not email or otp:
+        if not email or not otp:
             context = {"detail": "Email and otp are required"}
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
         if user.verified:
@@ -76,9 +82,10 @@ class AccountCreation(viewsets.ViewSet):
             return Response(context, status=status.HTTP_208_ALREADY_REPORTED)
         user_otp = get_verification_token(email)
         if otp == user_otp.token:
-            if user_otp.time + timedelta(minutes=5) < datetime.now():
+            if user_otp.time + timedelta(minutes=5) > datetime.now(timezone.utc):
                 user.verified = True
                 user.save()
+                user_otp.delete()
                 email_thread = threading.Thread(target=verification_confirmation_email, args=[email])
                 context = {"detail": "Account verified successfully", "user": get_user_information(user)}
                 return Response(context, status=status.HTTP_200_OK)

@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
+import uuid
 
 class PurpleWigBaseUser(BaseUserManager):
     """Create base user"""
@@ -26,15 +27,15 @@ class PurpleWigBaseUser(BaseUserManager):
 
 class PurpleWigUser(AbstractBaseUser):
     """PurpleWigBaseUser model"""
+    user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     verified = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
     objects = PurpleWigBaseUser()
     
     def has_perm(self, perm, obj=None):
@@ -51,4 +52,8 @@ class VerificationToken(models.Model):
     """Verification token model"""
     token = models.CharField(max_length=255)
     email = models.EmailField()
-    time = models.DateTimeField(auto_now_add=True)
+    time = models.DateTimeField()
+    
+    def __str__(self):
+        return f"{self.email} - {self.token}"
+    

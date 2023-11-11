@@ -7,7 +7,7 @@ UserModel = get_user_model()
 def get_user_information(user):
     """Get user information"""
     user_information = {
-        "id": user.id,
+        "id": user.user_id,
         "email": user.email,
     }
     return user_information

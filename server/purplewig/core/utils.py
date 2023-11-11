@@ -1,7 +1,9 @@
-import random
+import random, string
 from django.core.mail import EmailMultiAlternatives, send_mail
-from core.senders import *
-from core.retrievers import *
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from core.senders.accounts import *
+from core.retrievers.accounts import *
 
 from core.models import *
 def generate_otp(otp_length):
@@ -19,8 +21,9 @@ def email_verification(email: str, otp_length: int):
 
     subject = "Purple Wig  Email Verification Code"
     pin = generate_otp(otp_length)
+    print(f"{pin}")
 
-    sender = "purplewig@gamil.com"
+    sender = "info@successbuilderhub.com"
     receiver = [email]
     html_content = render_to_string(
         "core/verification_email.html",
@@ -35,7 +38,9 @@ def email_verification(email: str, otp_length: int):
         if token:
             update_verification_token(token, pin)
         else:
-            create_verification_token(receiver, pin)
+            print(f"receiver: {receiver}")
+            pin_created = create_verification_token(receiver, pin)
+            print(f"pin created: {pin_created}")
         return True
     return False
 
@@ -46,7 +51,7 @@ def verification_confirmation_email(email):
     """
     subject = "Purple Wig Email Address Verification Confirmation"
 
-    sender = "purplewig@gmail.com"
+    sender = "info@successbuilderhub.com"
     receiver = [email]
 
     html_content = render_to_string(
