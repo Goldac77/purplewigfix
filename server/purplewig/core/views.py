@@ -5,6 +5,8 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from core.senders.accounts import *
 from core.retrievers.accounts import *
+from core.retrievers.course import *
+from core.senders.course import *
 from core.utils import *
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
@@ -95,3 +97,178 @@ class AccountCreation(viewsets.ViewSet):
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         context = {"detail": "Invalid verification code"}
         return Response(context, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class PasswordResetViewset(viewsets.ViewSet):
+    """Password rest viewset"""
+    
+    def password_reset_request(self, request):
+        """Password reset"""
+        email = request.data['email']
+        if not email:
+            context = {"detail": "Email is required"}
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+        user = get_user_by_email(email=email)
+        if not user:
+            context = {"detail": "User does not exist"}
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+        user_otp = get_password_reset_token(email)
+        if user_otp:
+            user_otp.delete()
+        if password_reset_verification(email, 5):
+            context = {"detail": "Password reset code successfully sent", "email": email}
+            return Response(context, status=status.HTTP_200_OK)
+        return Response(
+            {"detail": "Could not send password reset code"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+        
+    def password_reset_confirm(self, request):
+        """Password set"""
+        email = request.data['email']
+        otp = request.data['otp']
+        password = request.data['password']
+        user = get_user_by_email(email=email)
+        if not email or not otp or not password:
+            context = {"detail": "Email, otp and password are required"}
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+        user_otp = get_password_reset_token(email)
+        if otp == user_otp.token:
+            if user_otp.time + timedelta(minutes=5) > datetime.now(timezone.utc):
+                user.set_password(password)
+                user.save()
+                user_otp.delete()
+                context = {"detail": "Password reset successfully"}
+                return Response(context, status=status.HTTP_200_OK)
+            else:
+                user_otp.delete()
+                context = {"detail": "Password reset code expired"}
+                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+        context = {"detail": "Invalid password reset code"}
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class CourseViewset(viewsets.ViewSet):
+    """Course viewset"""
+    
+    def list(self, request):
+        """Get all courses"""
+        courses = get_all_courses()
+        context = {"courses": courses}
+        return Response(context, status=status.HTTP_200_OK)
+    
+    
+    def create(self, request):
+        """Create course"""
+        name = request.data['name']
+        description = request.data['description']
+        if not name or not description:
+            context = {"detail": "Name and description are required"}
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+        course = get_course_by_name(name)
+        if course:
+            context = {"detail": "Course already exists"}
+            return Response(context, status=status.HTTP_208_ALREADY_REPORTED)
+        course = create_course(name, description)
+        context = {"detail": "Course created successfully", "course": get_course_information(course)}
+        return Response(context, status=status.HTTP_201_CREATED)
+    
+    
+    def retrieve(self, request, pk=None):
+        """Get course by id"""
+        course = get_course_by_id(pk)
+        if not course:
+            context = {"detail": "Course does not exist"}
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+        context = {"course": get_course_information(course)}
+        return Response(context, status=status.HTTP_200_OK)
+    
+    
+    def update(self, request, pk=None):
+        """Update course"""
+        name = request.data['name']
+        description = request.data['description']
+        if not name or not description:
+            context = {"detail": "Name and description are required"}
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+        course = get_course_by_id(pk)
+        if not course:
+            context = {"detail": "Course does not exist"}
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+        course = update_course(course, name, description)
+        context = {"detail": "Course updated successfully", "course": get_course_information(course)}
+        return Response(context, status=status.HTTP_200_OK)
+    
+    
+    def destroy(self, request, pk=None):
+        """Delete course"""
+        course = get_course_by_id(pk)
+        if not course:
+            context = {"detail": "Course does not exist"}
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+        course.delete()
+        context = {"detail": "Course deleted successfully"}
+        return
+    
+
+class CourseRegistrationViewset(viewsets.ViewSet):
+    """Register course viewset"""
+    
+    def create(self, request, id):
+        """Register course"""
+        course = get_course_by_id(id)
+        if not course:
+            context = {"detail": "Course does not exist"}
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+        course_registration = create_course_registration(course, request.data)
+        context = {"detail": "Course registration successful", "course_registration": course_registration}
+        return Response(context, status=status.HTTP_201_CREATED)
+    
+    
+    def list(self, request):
+        """Get all course registrations"""
+        course_registrations = get_all_course_registrations()
+        context = {"course_registrations": course_registrations}
+        return Response(context, status=status.HTTP_200_OK)
+    
+    
+    def retrieve(self, request, pk=None):
+        """Get course registration by id"""
+        course_registration = get_course_registration_by_id(pk)
+        if not course_registration:
+            context = {"detail": "Course registration does not exist"}
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+        context = {"course_registration": course_registration}
+        return Response(context, status=status.HTTP_200_OK)
+    
+    
+    def destroy(self, request, pk=None):
+        """Delete course registration"""
+        course_registration = get_course_registration_by_id(pk)
+        if not course_registration:
+            context = {"detail": "Course registration does not exist"}
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+        course_registration.delete()
+        context = {"detail": "Course registration deleted successfully"}
+        return Response(context, status=status.HTTP_200_OK)
+    
+    
+    def update(self, request, pk=None):
+        """Update course registration"""
+        course_registration = get_course_registration_by_id(pk)
+        if not course_registration:
+            context = {"detail": "Course registration does not exist"}
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+class ServiceRegistrationViewset(viewsets.ViewSet):
+    """Register course viewset"""
+    
+    def create(self, request, id):
+        """Register course"""
+        service = get_service_by_id(id)
+        if not service:
+            context = {"detail": "service does not exist"}
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+        service_registration = create_service_registration(service, request.data)
+        context = {"detail": "service registration successful", "service_registration": service_registration}
+        return Response(context, status=status.HTTP_201_CREATED)

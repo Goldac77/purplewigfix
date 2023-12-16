@@ -36,3 +36,21 @@ def get_verification_token(email):
         return token
     except VerificationToken.DoesNotExist:
         return None
+    
+    
+def get_user_by_id(user_id):
+    """Get user by id"""
+    try:
+        user = PurpleWigUser.objects.get(user_id=user_id)
+        return user
+    except PurpleWigUser.DoesNotExist:
+        return None
+
+
+def get_password_reset_token(email):
+    """Get password reset token"""
+    try:
+        token = PasswordResetToken.objects.get(email=email)
+        return token
+    except PasswordResetToken.DoesNotExist:
+        return None

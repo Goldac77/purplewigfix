@@ -23,7 +23,7 @@ def email_verification(email: str, otp_length: int):
     pin = generate_otp(otp_length)
     print(f"{pin}")
 
-    sender = "info@successbuilderhub.com"
+    sender = "konadulordkweku@gmail.com"
     receiver = [email]
     html_content = render_to_string(
         "core/verification_email.html",
@@ -39,7 +39,7 @@ def email_verification(email: str, otp_length: int):
             update_verification_token(token, pin)
         else:
             print(f"receiver: {receiver}")
-            pin_created = create_verification_token(receiver, pin)
+            pin_created = create_verification_token(receiver[0], pin)
             print(f"pin created: {pin_created}")
         return True
     return False
@@ -51,7 +51,7 @@ def verification_confirmation_email(email):
     """
     subject = "Purple Wig Email Address Verification Confirmation"
 
-    sender = "info@successbuilderhub.com"
+    sender = "konadulordkweku@gmail.com"
     receiver = [email]
 
     html_content = render_to_string(
@@ -65,3 +65,61 @@ def verification_confirmation_email(email):
     if email.send():
         return True
     return False
+
+
+def password_reset_verification(email: str, otp_length: int):
+    """
+    Send email verification code to new user
+    """
+
+    subject = "Purple Wig Password Resent Email Verification"
+    pin = generate_otp(otp_length)
+    print(f"{pin}")
+
+    sender = "konadulordkweku@gmail.com"
+    receiver = [email]
+    html_content = render_to_string(
+        "core/reset_password.html",
+        {"pin": pin, "receiver": email},
+    )
+    text_content = strip_tags(html_content)
+    email_obj = EmailMultiAlternatives(subject, text_content, sender, receiver)
+    email_obj.attach_alternative(html_content, "text/html")
+
+    if email_obj.send():
+        token = get_password_reset_token(receiver)
+        if token:
+            update_password_token(token, pin)
+        else:
+            pin_created = create_password_token(receiver[0], pin)
+        return True
+    return False
+
+
+
+
+def password_cofirmation_email(email, otp_length):
+    """
+    Confirm password reset
+    """
+    subject = "Purple Wig Password Reset Confirmation"
+    pin = generate_otp(otp_length)
+    sender = "konadulordkweku@gmail.com"
+    receiver = [email]
+    html_content = render_to_string(
+        "core/verification_email.html",
+        {"pin": pin, "receiver": email},
+    )
+    text_content = strip_tags(html_content)
+    email_obj = EmailMultiAlternatives(subject, text_content, sender, receiver)
+    email_obj.attach_alternative(html_content, "text/html")
+
+    if email_obj.send():
+        token = get_password_reset_token(receiver)
+        if token:
+            update_password_token(token, pin)
+        else:
+            pin_created = create_password_token(receiver[0], pin)
+        return True
+    return False
+

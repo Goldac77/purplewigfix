@@ -9,7 +9,9 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
+from dotenv import load_dotenv
 
+load_dotenv()
 from pathlib import Path
 import os
 from datetime import timedelta
@@ -21,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-0wz=n)ze(-(7iu57y=l@jp%4^t)fcc-az=ucc3+2+wums1=6t+'
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -144,20 +146,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-# EMAIL_HOST = os.getenv("EMAIL_HOST")
-# EMAIL_PORT = os.getenv("EMAIL_PORT")
-EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
-# EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
-# EMAIL_HOST_PASSWORD='E1E62D6AC73D8210C1AC19694D8DCD987E6A'
-# EMAIL_HOST='smtp.elasticemail.com'
-# EMAIL_PORT=587
-# EMAIL_HOST_USER="konadulordkweku@gmail.com"
-
-EMAIL_HOST="smtp.elasticemail.com"
+EMAIL_HOST=os.getenv("EMAIL_HOST")
 EMAIL_USE_TLS=True
-EMAIL_HOST_USER="successbuilders360@gmail.com"
-EMAIL_HOST_PASSWORD="997AC47ACFFBE786434645418681F885E98B"
+EMAIL_HOST_USER=os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD=os.getenv("EMAIL_HOST_PASSWORD")
+EMAIL_PORT=os.getenv("EMAIL_PORT")
 
 
 # print(EMAIL_HOST, EMAIL_PORT, EMAIL_USE_TLS, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
