@@ -1,0 +1,13 @@
+#book_btn {
+    color: #fff;
+    font-size: 30px;
+    font-weight: bold;
+    text-align: center;
+    background-color: #800080;
+    border-style: solid;
+    border-color: #800080;
+    border-radius: 20px;
+    padding: 2%;
+    width: 40%;
+    max-width: 300px;
+}
