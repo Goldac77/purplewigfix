@@ -36,7 +36,8 @@ def create_service_registration(service, data):
     phone_number = data['phone_number']
     gender = data['gender']
     additional_info = data['additional_info']
-    service_register = ServiceRegistration(email=email, full_name=full_name, phone_number=phone_number, service=service, gender=gender, additional_info=additional_info)
+    service_register = ServiceRegistration.objects.create(email=email, full_name=full_name, phone_number=phone_number, service=service, gender=gender, additional_info=additional_info)
+    print(f"service_register {service_register}")
     service_registration_serializer = ServiceRegistrationSerializer(service_register)
     
     return service_registration_serializer.data

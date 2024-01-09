@@ -231,17 +231,53 @@ The API uses JWT (JSON Web Tokens) for authentication. To obtain a token, use th
 - `Endpoint: POST /service/register/create/<int:id>/`
     - **Parameters**:
         - `email`: User's email address
-        - `full_name:` User's full name
-        - `phone_number`: User's phone number
-        - `gender`: User's gender
         - **Response Format:**
 
         ```json
             {
-                "detail": "Service registration successful",
-                "service_registration": {
-                     "email": "example@example.com", ... 
-                }
+            "status": true,
+            "message": "Authorization URL created",
+            "data": {
+                "authorization_url": "https://checkout.paystack.com/39po0mi9cererex14jt2",
+                "access_code": "39po0mefrex14jt2",
+                "reference": "1qvekej3n22"
+                    }
             }
 
         ```
+
+
+
+### Verify Paystack Transaction <a name="verify-paystack-transaction"></a>
+- `Endpoint`: POST /service/register/verify/
+    - **Parameters**:
+        - `service_id`: ID of the service being registered for
+        - `reference`: Paystack transaction reference
+        - `email`: User's email address
+        - `full_name`: User's full name
+        - `phone_number`: User's phone number
+        - `gender`: Male
+        - `additional_info`: Additional information
+    - **Response Format:**
+
+        ```json
+            {
+                "detail": "Service booked successfully",
+                "data": {
+                    "email": "example@gmail.com",
+                    "full_name": "my Lord",
+                    "phone_number": "4453544553444",
+                    "gender": "masa",
+                    "additional_info": "ooo oky",
+                    "service": {
+                        "id": 1,
+                        "title": "Nails",
+                        "description": "tikjei",
+                        "price": "12.00",
+                        "image": "/services/Screenshot_10.png",
+                        "date": "2023-12-16"
+                    }
+                }
+            }
+        ```
+    **Description**: This endpoint verifies a Paystack transaction and completes the service registration process.

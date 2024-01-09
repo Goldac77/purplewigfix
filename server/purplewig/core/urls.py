@@ -29,5 +29,6 @@ urlpatterns = [
     path('course/registration/update/<int:pk>/', CourseRegistrationViewset.as_view({'put': 'update'})),
     ##service
     path('service/register/create/<int:id>/', ServiceRegistrationViewset.as_view({'post': 'create'})),
+    path('service/register/verify/', ServiceRegistrationViewset.as_view({'post': 'verify_transaction'})),
     
 ]

@@ -14,6 +14,8 @@ import threading
 from datetime import datetime, timedelta, timezone
 import pytz
 UTC = pytz.UTC
+import os
+import requests
 
 
 class AccountCreation(viewsets.ViewSet):
@@ -272,10 +274,11 @@ class ServiceRegistrationViewset(viewsets.ViewSet):
         if not service:
             context = {"detail": "service does not exist"}
             return Response(context, status=status.HTTP_404_NOT_FOUND)
+        print(service.price)
         if service:
             data = {
                 "email": email,
-                "amount": str(service.price) * 10,
+                "amount": str(service.price * 100),
                 "currency": 'GHS'
             }
             headers = {
@@ -301,6 +304,7 @@ class ServiceRegistrationViewset(viewsets.ViewSet):
         SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
         service_id = request.data.get('service_id')
         reference = request.data.get('reference')
+        email = request.data.get('email')
 
 
         if not service_id:
@@ -328,7 +332,7 @@ class ServiceRegistrationViewset(viewsets.ViewSet):
                 service = get_service_by_id(service_id)
                 user_service = create_service_registration(service, request.data)
                 
-                Transaction.objects.create(user=user, amount=service.price)
+                Transaction.objects.create(email=email, amount=service.price)
                 context = {
                     "detail": "Service booked successfully",
                     "data": user_service
