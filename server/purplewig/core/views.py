@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from core.models import PurpleWigUser
+from core.models import *
 from core.serializers import PurpleWigUserSerializer
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -266,9 +266,78 @@ class ServiceRegistrationViewset(viewsets.ViewSet):
     def create(self, request, id):
         """Register course"""
         service = get_service_by_id(id)
+        SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
+        url="https://api.paystack.co/transaction/initialize"
+        email = request.data.get('email')
         if not service:
             context = {"detail": "service does not exist"}
             return Response(context, status=status.HTTP_404_NOT_FOUND)
-        service_registration = create_service_registration(service, request.data)
-        context = {"detail": "service registration successful", "service_registration": service_registration}
-        return Response(context, status=status.HTTP_201_CREATED)
+        if service:
+            data = {
+                "email": email,
+                "amount": str(service.price) * 10,
+                "currency": 'GHS'
+            }
+            headers = {
+            "Authorization": f"Bearer {SECRET_KEY}",
+            "Content-Type": "application/json"
+            }
+            response = requests.post(url, headers=headers, json=data)
+            if response.status_code == 200:
+                data = response.json()
+                return Response(data, status=response.status_code)
+            else:
+                return Response(response.text, status=response.status_code)
+    
+    
+    def verify_transaction(self, request)-> Response:
+        """ endpoint to verify transaction
+
+        Args:
+            request (http request): http request object
+            Return (http response): http response object
+        """
+        
+        SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
+        service_id = request.data.get('service_id')
+        reference = request.data.get('reference')
+
+
+        if not service_id:
+            context = {
+                "error": "service id is required"
+            }
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+        if not reference:
+            context = {
+                "error": "reference is required"
+            }
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+        url = f"https://api.paystack.co/transaction/verify/{reference}"
+        
+        headers = {
+            "Authorization": f"Bearer {SECRET_KEY}",
+            "Content-Type": "application/json"
+            }
+        
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code == 200:
+            response = response.json()
+            if response["data"]["status"] == "success":
+                service = get_service_by_id(service_id)
+                user_service = create_service_registration(service, request.data)
+                
+                Transaction.objects.create(user=user, amount=service.price)
+                context = {
+                    "detail": "Service booked successfully",
+                    "data": user_service
+                }
+                return Response(context, status=status.HTTP_200_OK)
+            else:
+                context = {
+                    "detail": "Transaction failed"
+                }
+                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(response.text, status=response.status_code)        

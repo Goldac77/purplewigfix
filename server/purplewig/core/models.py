@@ -121,3 +121,8 @@ class ServiceRegistration(models.Model):
 
     def __str__(self):
         return f"{self.email} - {self.service.title}"
+    
+
+class Transaction(models.Model):
+    email = models.EmailField(max_length=254)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
