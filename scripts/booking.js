@@ -29,6 +29,8 @@ const state = {
 const service = document.querySelector("#service");
 const stateRadios = document.querySelectorAll('input[name="state"]');
 
+const bookBtn = document.querySelector("#book_btn");
+
 const price = document.querySelector("#price");
 
 stateRadios.forEach(radio => {
