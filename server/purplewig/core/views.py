@@ -269,7 +269,7 @@ class ServiceRegistrationViewset(viewsets.ViewSet):
     def create(self, request, id):
         """Register course"""
         service = get_service_by_id(id)
-        SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
+        SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY")
         url="https://api.paystack.co/transaction/initialize"
         email = request.data.get('email')
         if not service:
@@ -304,7 +304,7 @@ class ServiceRegistrationViewset(viewsets.ViewSet):
         """
         time.sleep(100)
         
-        SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
+        SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY")
         email = request.data.get('email')
 
 
