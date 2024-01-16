@@ -29,7 +29,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -160,3 +160,9 @@ EMAIL_USE_TLS=True
 EMAIL_HOST_USER=os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD=os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_PORT=os.environ.get("EMAIL_PORT")
+
+CORS_ALLOW_ALL_ORIGINS = True
+CSRF_TRUSTED_ORIGINS = [
+    'https://01c8-102-176-65-85.ngrok-free.app',
+    'https://purplewig.onrender.com/',
+]
