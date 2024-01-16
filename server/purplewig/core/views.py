@@ -16,6 +16,7 @@ import pytz
 UTC = pytz.UTC
 import os
 import requests
+import time
 
 
 class AccountCreation(viewsets.ViewSet):
@@ -274,7 +275,6 @@ class ServiceRegistrationViewset(viewsets.ViewSet):
         if not service:
             context = {"detail": "service does not exist"}
             return Response(context, status=status.HTTP_404_NOT_FOUND)
-        print(service.price)
         if service:
             data = {
                 "email": email,
@@ -288,35 +288,26 @@ class ServiceRegistrationViewset(viewsets.ViewSet):
             response = requests.post(url, headers=headers, json=data)
             if response.status_code == 200:
                 data = response.json()
+                verify_thread = threading.Thread(target=self.verify_transaction, args=[request, data["data"]["reference"], service])
+                verify_thread.start()
                 return Response(data, status=response.status_code)
             else:
                 return Response(response.text, status=response.status_code)
     
     
-    def verify_transaction(self, request)-> Response:
+    def verify_transaction(self, request, reference, service)-> Response:
         """ endpoint to verify transaction
 
         Args:
             request (http request): http request object
             Return (http response): http response object
         """
+        time.sleep(100)
         
         SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
-        service_id = request.data.get('service_id')
-        reference = request.data.get('reference')
         email = request.data.get('email')
 
 
-        if not service_id:
-            context = {
-                "error": "service id is required"
-            }
-            return Response(context, status=status.HTTP_400_BAD_REQUEST)
-        if not reference:
-            context = {
-                "error": "reference is required"
-            }
-            return Response(context, status=status.HTTP_400_BAD_REQUEST)
         url = f"https://api.paystack.co/transaction/verify/{reference}"
         
         headers = {
@@ -329,7 +320,6 @@ class ServiceRegistrationViewset(viewsets.ViewSet):
         if response.status_code == 200:
             response = response.json()
             if response["data"]["status"] == "success":
-                service = get_service_by_id(service_id)
                 user_service = create_service_registration(service, request.data)
                 
                 Transaction.objects.create(email=email, amount=service.price)
@@ -337,11 +327,9 @@ class ServiceRegistrationViewset(viewsets.ViewSet):
                     "detail": "Service booked successfully",
                     "data": user_service
                 }
-                return Response(context, status=status.HTTP_200_OK)
             else:
                 context = {
                     "detail": "Transaction failed"
                 }
-                return Response(context, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(response.text, status=response.status_code)        
+            pass
